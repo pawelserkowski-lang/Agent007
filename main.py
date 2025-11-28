@@ -1,14 +1,8 @@
-"""
-Entry point for Chat Atom Modular.
-Initializes UI, logging, and model registry.
-"""
-from core.engine import ChatEngine
-from ui.app import ChatApp
-
-def main():
-    engine = ChatEngine()
-    app = ChatApp(engine)
-    app.run()
+import os
+from dotenv import load_dotenv
+load_dotenv()
+from ui.main_window import App
 
 if __name__ == "__main__":
-    main()
+    app = App()
+    app.mainloop()

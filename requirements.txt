@@ -1,0 +1,7 @@
+customtkinter
+google-generativeai
+pillow
+packaging
+python-dotenv
+opencv-python
+numpy
