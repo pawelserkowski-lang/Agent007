@@ -13,6 +13,11 @@
             md_bg_color: 0.9, 0.95, 1, 1
             specific_text_color: 0.1, 0.2, 0.3, 1
             elevation: 0
+            right_action_items: [
+                ['refresh', lambda x: root.refresh_history()],
+                ['delete-outline', lambda x: root.clear_history()],
+                ['content-save-outline', lambda x: root.apply_system_prompt()]
+            ]
 
         MDCard:
             orientation: 'vertical'
@@ -22,6 +27,14 @@
             radius: [12, 12, 12, 12]
             size_hint_y: None
             height: self.minimum_height
+
+            MDLabel:
+                text: 'Ustawienia'
+                theme_text_color: 'Custom'
+                text_color: 0.12, 0.2, 0.3, 1
+                bold: True
+                font_style: 'H6'
+                halign: 'left'
 
             MDGridLayout:
                 cols: 2
