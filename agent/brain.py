@@ -1,10 +1,15 @@
 import os
-from typing import Generator
+from typing import Any, Generator, Iterable, Mapping, Sequence
 
 import ollama
 from dotenv import load_dotenv
 
 from agent.memory import Memory
+
+ChatMessage = dict[str, str]
+ChatChunk = Mapping[str, Any]
+ChatStream = Iterable[ChatChunk]
+ChatGenerator = Generator[str, None, None]
 
 load_dotenv()
 
@@ -17,9 +22,9 @@ class AgentService:
         self.memory = memory or Memory()
         self.system_prompt = os.getenv('SYSTEM_PROMPT', '')
 
-    def _build_messages(self) -> list[dict]:
+    def _build_messages(self) -> list[ChatMessage]:
         history = self.memory.get_history()
-        messages: list[dict] = []
+        messages: list[ChatMessage] = []
 
         if self.system_prompt:
             messages.append({
@@ -30,30 +35,58 @@ class AgentService:
         messages.extend(history)
         return messages
 
-    def think_stream(self, user_text: str) -> Generator[str, None, None]:
-        '''Zapisuje wiadomość użytkownika, woła Ollamę i streamuje odpowiedź.'''
+    def think_stream(self, user_text: str) -> ChatGenerator:
+        """Zapisuje wiadomość użytkownika i streamuje odpowiedź Ollamy."""
 
-        self.memory.add_message('user', user_text)
+        self._remember_user_message(user_text)
         messages = self._build_messages()
 
         try:
-            stream = ollama.chat(
-                model=self.model,
-                messages=messages,
-                stream=True,
-            )
+            collected_chunks: list[str] = []
+            for chunk in self._response_chunks(messages):
+                collected_chunks.append(chunk)
+                yield chunk
 
-            full_response = ''
-            for chunk in stream:
-                content = chunk.get('message', {}).get('content', '')
-                if not content:
-                    continue
-                full_response += content
+            self._remember_assistant_message(''.join(collected_chunks))
+        except Exception as e:
+            yield f'[Błąd połączenia z modelem: {e}]'
+
+    def _remember_user_message(self, content: str) -> None:
+        self.memory.add_message('user', content)
+
+    def _remember_assistant_message(self, content: str) -> None:
+        if content.strip():
+            self.memory.add_message('assistant', content)
+
+    def _response_chunks(
+        self, messages: Sequence[ChatMessage]
+    ) -> ChatGenerator:
+        for chunk in self._stream_model(messages):
+            content = self._extract_chunk_content(chunk)
+            if content:
                 yield content
 
-            if full_response.strip():
-                self.memory.add_message('assistant', full_response)
+    def _stream_model(self, messages: Sequence[ChatMessage]) -> ChatStream:
+        stream = self._create_model_stream(messages)
+        return stream if isinstance(stream, Iterable) else ()
 
-        except Exception as e:
-            error_msg = f'[Błąd połączenia z modelem: {e}]'
-            yield error_msg
+    def _create_model_stream(
+        self, messages: Sequence[ChatMessage]
+    ) -> ChatStream:
+        return ollama.chat(
+            model=self.model,
+            messages=messages,
+            stream=True,
+        )
+
+    @staticmethod
+    def _extract_chunk_content(chunk: Any) -> str:
+        if not isinstance(chunk, Mapping):
+            return ''
+
+        message = chunk.get('message', {})
+        if not isinstance(message, Mapping):
+            return ''
+
+        content = message.get('content', '')
+        return content if isinstance(content, str) else ''

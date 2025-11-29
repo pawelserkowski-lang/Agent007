@@ -1,40 +1,337 @@
 #:import dp kivy.metrics.dp
 
 <MainScreen>:
-    MDBoxLayout:
-        orientation: 'vertical'
-        padding: '10dp'
-        spacing: '10dp'
+    md_bg_color: 0.97, 0.985, 1, 1
 
-        # Lista wiadomości
-        MDScrollView:
-            id: scroll_view
-            do_scroll_x: False
+    FloatLayout:
+        FitImage:
+            source: 'tlo.webp'
+            allow_stretch: True
+            keep_ratio: False
+            size_hint: 1, 1
+            pos_hint: {'center_x': .5, 'center_y': .5}
+            opacity: 0.52
 
-            MDList:
-                id: chat_list
-                spacing: '12dp'
-                padding: [0, 0, 0, '20dp']
-
-        # Pasek inputu
         MDBoxLayout:
-            size_hint_y: None
-            height: '60dp'
-            spacing: '10dp'
-            padding: [0, '5dp', 0, '5dp']
+            orientation: 'vertical'
+            padding: '12dp'
+            spacing: '12dp'
 
-            MDTextField:
-                id: user_input
-                hint_text: 'Napisz wiadomość...'
-                mode: 'rectangle'
-                multiline: False
-                on_text_validate: root.send_message()
+            MDTopAppBar:
+                title: 'Agent007 – Lokalny asystent'
+                md_bg_color: 0.89, 0.93, 1, 1
+                specific_text_color: 0.08, 0.16, 0.25, 1
+                elevation: 0
+                right_action_items: [
+                    ['refresh', lambda x: root.refresh_history()],
+                    ['delete-outline', lambda x: root.clear_history()],
+                    ['content-save-outline', lambda x: root.apply_system_prompt()]
+                ]
 
-            MDIconButton:
-                icon: 'send'
-                theme_text_color: 'Custom'
-                text_color: app.theme_cls.primary_color
-                on_release: root.send_message()
+            MDCard:
+                orientation: 'vertical'
+                padding: '14dp'
+                spacing: '6dp'
+                md_bg_color: 1, 1, 1, 0.92
+                radius: [18, 18, 18, 18]
+                size_hint_y: None
+                height: self.minimum_height
+                elevation: 1
+
+                MDBoxLayout:
+                    spacing: '14dp'
+                    adaptive_height: True
+                    FitImage:
+                        source: 'logo.webp'
+                        size_hint: None, None
+                        size: '440dp', '150dp'
+                        allow_stretch: False
+                        keep_ratio: True
+                        pos_hint: {'center_y': 0.5}
+                    MDBoxLayout:
+                        orientation: 'vertical'
+                        adaptive_height: True
+                        spacing: '4dp'
+                        MDLabel:
+                            text: 'Agent007'
+                            theme_text_color: 'Custom'
+                            text_color: 0.08, 0.16, 0.25, 1
+                            font_style: 'H4'
+                            bold: True
+                        MDLabel:
+                            text: 'Lokalny asystent z nową, czytelną oprawą graficzną.'
+                            theme_text_color: 'Custom'
+                            text_color: 0.18, 0.26, 0.38, 1
+                            font_style: 'Subtitle2'
+                            opacity: 0.9
+
+            MDCard:
+                orientation: 'vertical'
+                padding: '14dp'
+                spacing: '12dp'
+                size_hint_y: None
+                height: self.minimum_height
+                md_bg_color: 0.08, 0.11, 0.16, 1
+                radius: [16, 16, 16, 16]
+                MDBoxLayout:
+                    adaptive_height: True
+                    spacing: '12dp'
+
+                    MDBoxLayout:
+                        orientation: 'vertical'
+                        adaptive_height: True
+                        spacing: '2dp'
+                        MDLabel:
+                            text: 'Podgląd pracy agenta'
+                            theme_text_color: 'Custom'
+                            text_color: 0.86, 0.92, 1, 1
+                            font_style: 'H6'
+                            bold: True
+                        MDLabel:
+                            text: 'Tryb inspirowany chat.com — skupiony na statusie, strumieniu odpowiedzi i kontekście.'
+                            theme_text_color: 'Custom'
+                            text_color: 0.8, 0.87, 0.95, 1
+                            font_style: 'Caption'
+                            opacity: 0.9
+
+                    MDBoxLayout:
+                        adaptive_height: True
+                        spacing: '12dp'
+                        MDLabel:
+                            id: preview_status
+                            text: 'Gotowy do pracy'
+                            theme_text_color: 'Custom'
+                            text_color: 0.58, 0.82, 1, 1
+                            font_style: 'Subtitle1'
+                            bold: True
+                            size_hint_x: None
+                            width: self.texture_size[0] + dp(8)
+                        MDSpinner:
+                            id: preview_spinner
+                            size_hint: None, None
+                            size: dp(26), dp(26)
+                            active: False
+                            color: 0.6, 0.82, 1, 1
+                            line_width: 2
+
+                MDSeparator:
+                    height: 1
+                    color: 0.25, 0.32, 0.42, 0.9
+
+                MDBoxLayout:
+                    spacing: '14dp'
+                    adaptive_height: True
+                    MDCard:
+                        orientation: 'vertical'
+                        padding: '12dp'
+                        spacing: '6dp'
+                        md_bg_color: 0.11, 0.16, 0.22, 1
+                        radius: [12, 12, 12, 12]
+                        ripple_behavior: False
+                        MDLabel:
+                            text: 'Ostatnia wiadomość'
+                            theme_text_color: 'Custom'
+                            text_color: 0.78, 0.86, 0.95, 1
+                            font_style: 'Caption'
+                        MDLabel:
+                            id: preview_prompt
+                            text: '—'
+                            theme_text_color: 'Custom'
+                            text_color: 0.93, 0.96, 1, 1
+                            font_style: 'Body1'
+                            bold: True
+                            shorten: True
+                            shorten_from: 'left'
+                            shorten_strip: '...'
+                            max_lines: 2
+
+                    MDCard:
+                        orientation: 'vertical'
+                        padding: '12dp'
+                        spacing: '6dp'
+                        md_bg_color: 0.11, 0.15, 0.21, 1
+                        radius: [12, 12, 12, 12]
+                        ripple_behavior: False
+                        MDLabel:
+                            text: 'Podgląd odpowiedzi'
+                            theme_text_color: 'Custom'
+                            text_color: 0.78, 0.86, 0.95, 1
+                        MDLabel:
+                            id: preview_stream
+                            text: 'Czekam na nowe polecenie...'
+                            theme_text_color: 'Custom'
+                            text_color: 0.93, 0.96, 1, 1
+                            font_style: 'Body1'
+                            max_lines: 3
+                            shorten: True
+                            shorten_from: 'left'
+                            shorten_strip: '...'
+
+                MDBoxLayout:
+                    adaptive_height: True
+                    spacing: '10dp'
+                    MDCard:
+                        padding: '10dp'
+                        md_bg_color: 0.11, 0.15, 0.21, 1
+                        radius: [10, 10, 10, 10]
+                        size_hint_x: None
+                        width: self.minimum_width
+                        MDBoxLayout:
+                            adaptive_width: True
+                            spacing: '8dp'
+                            MDIcon:
+                                icon: 'chip'
+                                theme_text_color: 'Custom'
+                                text_color: 0.7, 0.86, 1, 1
+                            MDLabel:
+                                id: preview_model
+                                text: 'Model: —'
+                                theme_text_color: 'Custom'
+                                text_color: 0.93, 0.96, 1, 1
+                                font_style: 'Caption'
+                                bold: True
+                    MDCard:
+                        padding: '10dp'
+                        md_bg_color: 0.11, 0.15, 0.21, 1
+                        radius: [10, 10, 10, 10]
+                        size_hint_x: None
+                        width: self.minimum_width
+                        MDBoxLayout:
+                            adaptive_width: True
+                            spacing: '8dp'
+                            MDIcon:
+                                icon: 'history'
+                                theme_text_color: 'Custom'
+                                text_color: 0.7, 0.86, 1, 1
+                            MDLabel:
+                                id: preview_history
+                                text: 'Historia: —'
+                                theme_text_color: 'Custom'
+                                text_color: 0.93, 0.96, 1, 1
+                                font_style: 'Caption'
+                                bold: True
+
+            MDCard:
+                orientation: 'vertical'
+                padding: '12dp'
+                spacing: '10dp'
+                md_bg_color: 0.95, 0.98, 1, 0.74
+                radius: [12, 12, 12, 12]
+                size_hint_y: None
+                height: self.minimum_height
+
+                MDLabel:
+                    text: 'Ustawienia'
+                    theme_text_color: 'Custom'
+                    text_color: 0.12, 0.2, 0.3, 1
+                    bold: True
+                    font_style: 'H6'
+                    halign: 'left'
+
+                MDGridLayout:
+                    cols: 2
+                    adaptive_height: True
+                    spacing: '8dp'
+
+                    MDTextField:
+                        id: model_input
+                        hint_text: 'Model (np. llama3)'
+                        mode: 'rectangle'
+                        multiline: False
+                        helper_text: 'Używany model LLM'
+                        helper_text_mode: 'on_focus'
+
+                    MDRaisedButton:
+                        text: 'Zastosuj model'
+                        md_bg_color: 0.65, 0.82, 1, 1
+                        text_color: 0.05, 0.1, 0.2, 1
+                        on_release: root.apply_model()
+
+                    MDTextField:
+                        id: history_limit_input
+                        hint_text: 'Limit historii (wiersze)'
+                        mode: 'rectangle'
+                        multiline: False
+                        helper_text: 'Ile ostatnich wiadomości wczytać'
+                        helper_text_mode: 'on_focus'
+
+                    MDBoxLayout:
+                        spacing: '8dp'
+                        adaptive_height: True
+                        MDRaisedButton:
+                            text: 'Zastosuj limit'
+                            md_bg_color: 0.65, 0.82, 1, 1
+                            text_color: 0.05, 0.1, 0.2, 1
+                            on_release: root.apply_history_limit()
+                        MDRaisedButton:
+                            text: 'Odśwież historię'
+                            md_bg_color: 0.65, 0.82, 1, 1
+                            text_color: 0.05, 0.1, 0.2, 1
+                            on_release: root.refresh_history()
+                        MDRaisedButton:
+                            text: 'Wyczyść historię'
+                            md_bg_color: 0.85, 0.9, 0.95, 1
+                            text_color: 0.1, 0.1, 0.1, 1
+                            on_release: root.clear_history()
+
+                MDLabel:
+                    text: 'System prompt'
+                    theme_text_color: 'Custom'
+                    text_color: 0.1, 0.2, 0.35, 1
+                    bold: True
+
+                MDTextField:
+                    id: system_prompt_input
+                    hint_text: 'Zdefiniuj zachowanie asystenta'
+                    mode: 'rectangle'
+                    multiline: True
+                    size_hint_y: None
+                    height: '120dp'
+                    helper_text: 'Zmiana wpływa na kolejne odpowiedzi'
+                    helper_text_mode: 'on_focus'
+
+                MDRaisedButton:
+                    text: 'Zapisz system prompt'
+                    md_bg_color: 0.65, 0.82, 1, 1
+                    text_color: 0.05, 0.1, 0.2, 1
+                    size_hint_x: None
+                    width: '200dp'
+                    on_release: root.apply_system_prompt()
+
+            MDCard:
+                orientation: 'vertical'
+                padding: '12dp'
+                spacing: '10dp'
+                md_bg_color: 1, 1, 1, 0.72
+                radius: [12, 12, 12, 12]
+
+                MDScrollView:
+                    id: scroll_view
+                    do_scroll_x: False
+
+                    MDList:
+                        id: chat_list
+                        spacing: '12dp'
+                        padding: [0, 0, 0, '20dp']
+
+                MDBoxLayout:
+                    size_hint_y: None
+                    height: '60dp'
+                    spacing: '10dp'
+                    padding: [0, '5dp', 0, '5dp']
+
+                    MDTextField:
+                        id: user_input
+                        hint_text: 'Napisz wiadomość...'
+                        mode: 'rectangle'
+                        multiline: False
+                        on_text_validate: root.send_message()
+
+                    MDRaisedButton:
+                        text: 'Wyślij'
+                        md_bg_color: 0.65, 0.82, 1, 1
+                        text_color: 0.05, 0.1, 0.2, 1
+                        on_release: root.send_message()
 
     MDSpinner:
         id: loading_spinner
