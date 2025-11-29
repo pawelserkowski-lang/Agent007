@@ -9,6 +9,7 @@ from agent.memory import Memory
 ChatMessage = dict[str, str]
 ChatChunk = Mapping[str, Any]
 ChatStream = Iterable[ChatChunk]
+ChatGenerator = Generator[str, None, None]
 
 load_dotenv()
 
@@ -34,8 +35,8 @@ class AgentService:
         messages.extend(history)
         return messages
 
-    def think_stream(self, user_text: str) -> Generator[str, None, None]:
-        '''Zapisuje wiadomość użytkownika, woła Ollamę i streamuje odpowiedź.'''
+    def think_stream(self, user_text: str) -> ChatGenerator:
+        """Zapisuje wiadomość użytkownika i streamuje odpowiedź Ollamy."""
 
         self._remember_user_message(user_text)
         messages = self._build_messages()
@@ -57,7 +58,9 @@ class AgentService:
         if content.strip():
             self.memory.add_message('assistant', content)
 
-    def _response_chunks(self, messages: Sequence[ChatMessage]) -> Generator[str, None, None]:
+    def _response_chunks(
+        self, messages: Sequence[ChatMessage]
+    ) -> ChatGenerator:
         for chunk in self._stream_model(messages):
             content = self._extract_chunk_content(chunk)
             if content:
@@ -67,7 +70,9 @@ class AgentService:
         stream = self._create_model_stream(messages)
         return stream if isinstance(stream, Iterable) else ()
 
-    def _create_model_stream(self, messages: Sequence[ChatMessage]) -> ChatStream:
+    def _create_model_stream(
+        self, messages: Sequence[ChatMessage]
+    ) -> ChatStream:
         return ollama.chat(
             model=self.model,
             messages=messages,

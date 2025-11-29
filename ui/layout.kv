@@ -1,7 +1,7 @@
 #:import dp kivy.metrics.dp
 
 <MainScreen>:
-    md_bg_color: 0.98, 0.99, 1, 1
+    md_bg_color: 0.97, 0.985, 1, 1
 
     MDBoxLayout:
         orientation: 'vertical'
@@ -10,14 +10,162 @@
 
         MDTopAppBar:
             title: 'Agent007 – Lokalny asystent'
-            md_bg_color: 0.9, 0.95, 1, 1
-            specific_text_color: 0.1, 0.2, 0.3, 1
+            md_bg_color: 0.89, 0.93, 1, 1
+            specific_text_color: 0.08, 0.16, 0.25, 1
             elevation: 0
             right_action_items: [
                 ['refresh', lambda x: root.refresh_history()],
                 ['delete-outline', lambda x: root.clear_history()],
                 ['content-save-outline', lambda x: root.apply_system_prompt()]
             ]
+
+        MDCard:
+            orientation: 'vertical'
+            padding: '14dp'
+            spacing: '12dp'
+            size_hint_y: None
+            height: self.minimum_height
+            md_bg_color: 0.08, 0.11, 0.16, 1
+            radius: [16, 16, 16, 16]
+
+            MDBoxLayout:
+                adaptive_height: True
+                spacing: '12dp'
+
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    adaptive_height: True
+                    spacing: '2dp'
+                    MDLabel:
+                        text: 'Podgląd pracy agenta'
+                        theme_text_color: 'Custom'
+                        text_color: 0.86, 0.92, 1, 1
+                        font_style: 'H6'
+                        bold: True
+                    MDLabel:
+                        text: 'Tryb inspirowany chat.com — skupiony na statusie, strumieniu odpowiedzi i kontekście.'
+                        theme_text_color: 'Custom'
+                        text_color: 0.8, 0.87, 0.95, 1
+                        font_style: 'Caption'
+                        opacity: 0.9
+
+                MDBoxLayout:
+                    adaptive_height: True
+                    spacing: '12dp'
+                    MDLabel:
+                        id: preview_status
+                        text: 'Gotowy do pracy'
+                        theme_text_color: 'Custom'
+                        text_color: 0.58, 0.82, 1, 1
+                        font_style: 'Subtitle1'
+                        bold: True
+                        size_hint_x: None
+                        width: self.texture_size[0] + dp(8)
+                    MDSpinner:
+                        id: preview_spinner
+                        size_hint: None, None
+                        size: dp(26), dp(26)
+                        active: False
+                        color: 0.6, 0.82, 1, 1
+                        line_width: 2
+
+            MDSeparator:
+                height: 1
+                color: 0.25, 0.32, 0.42, 0.9
+
+            MDBoxLayout:
+                spacing: '14dp'
+                adaptive_height: True
+                MDCard:
+                    orientation: 'vertical'
+                    padding: '12dp'
+                    spacing: '6dp'
+                    md_bg_color: 0.11, 0.16, 0.22, 1
+                    radius: [12, 12, 12, 12]
+                    ripple_behavior: False
+                    MDLabel:
+                        text: 'Ostatnia wiadomość'
+                        theme_text_color: 'Custom'
+                        text_color: 0.78, 0.86, 0.95, 1
+                        font_style: 'Caption'
+                    MDLabel:
+                        id: preview_prompt
+                        text: '—'
+                        theme_text_color: 'Custom'
+                        text_color: 0.93, 0.96, 1, 1
+                        font_style: 'Body1'
+                        bold: True
+                        shorten: True
+                        shorten_from: 'left'
+                        shorten_strip: '...'
+                        max_lines: 2
+
+                MDCard:
+                    orientation: 'vertical'
+                    padding: '12dp'
+                    spacing: '6dp'
+                    md_bg_color: 0.11, 0.15, 0.21, 1
+                    radius: [12, 12, 12, 12]
+                    ripple_behavior: False
+                    MDLabel:
+                        text: 'Podgląd odpowiedzi'
+                        theme_text_color: 'Custom'
+                        text_color: 0.78, 0.86, 0.95, 1
+                        font_style: 'Caption'
+                    MDLabel:
+                        id: preview_stream
+                        text: 'Czekam na nowe polecenie...'
+                        theme_text_color: 'Custom'
+                        text_color: 0.93, 0.96, 1, 1
+                        font_style: 'Body1'
+                        max_lines: 3
+                        shorten: True
+                        shorten_from: 'left'
+                        shorten_strip: '...'
+
+            MDBoxLayout:
+                adaptive_height: True
+                spacing: '10dp'
+                MDCard:
+                    padding: '10dp'
+                    md_bg_color: 0.11, 0.15, 0.21, 1
+                    radius: [10, 10, 10, 10]
+                    size_hint_x: None
+                    width: self.minimum_width
+                    MDBoxLayout:
+                        adaptive_width: True
+                        spacing: '8dp'
+                        MDIcon:
+                            icon: 'chip'
+                            theme_text_color: 'Custom'
+                            text_color: 0.7, 0.86, 1, 1
+                        MDLabel:
+                            id: preview_model
+                            text: 'Model: —'
+                            theme_text_color: 'Custom'
+                            text_color: 0.93, 0.96, 1, 1
+                            font_style: 'Caption'
+                            bold: True
+                MDCard:
+                    padding: '10dp'
+                    md_bg_color: 0.11, 0.15, 0.21, 1
+                    radius: [10, 10, 10, 10]
+                    size_hint_x: None
+                    width: self.minimum_width
+                    MDBoxLayout:
+                        adaptive_width: True
+                        spacing: '8dp'
+                        MDIcon:
+                            icon: 'history'
+                            theme_text_color: 'Custom'
+                            text_color: 0.7, 0.86, 1, 1
+                        MDLabel:
+                            id: preview_history
+                            text: 'Historia: —'
+                            theme_text_color: 'Custom'
+                            text_color: 0.93, 0.96, 1, 1
+                            font_style: 'Caption'
+                            bold: True
 
         MDCard:
             orientation: 'vertical'

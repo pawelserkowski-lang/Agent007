@@ -58,7 +58,9 @@ def install_dependencies() -> None:
     print("Installing Kivy, KivyMD, Ollama, and python-dotenv via pip…")
     # Kivy uses an extra called "base" to install pre-built wheels. See:
     # https://kivy.org/doc/stable/installation/installation-windows.html
-    run_command('python -m pip install "kivy[base]" kivymd ollama python-dotenv')
+    run_command(
+        'python -m pip install "kivy[base]" kivymd ollama python-dotenv'
+    )
 
 
 def pull_llama_model(model_name: str = "llama3") -> None:

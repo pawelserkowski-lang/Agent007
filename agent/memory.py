@@ -5,13 +5,17 @@ from typing import Iterable
 
 
 class Memory:
-    '''Prosta pamięć rozmów oparta o SQLite z lockiem pod użycie wielowątkowe.'''
+    """
+    Prosta pamięć rozmów oparta o SQLite z lockiem pod użycie
+    wielowątkowe.
+    """
 
     def __init__(self, db_path: str | None = None):
         self.db_path = self._resolve_db_path(db_path)
         self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self.lock = Lock()
         self.default_history_limit = self._load_default_limit()
+        self.cache_limit = self.default_history_limit
         self._history_cache: list[dict[str, str]] = []
         self._configure_connection()
         self._create_table()
@@ -41,6 +45,10 @@ class Memory:
             )
             self.conn.commit()
             self._history_cache.append(entry)
+            if self.cache_limit >= 0:
+                overflow = len(self._history_cache) - self.cache_limit
+                if overflow > 0:
+                    del self._history_cache[:overflow]
 
     def get_history(self, limit: int | None = None) -> list[dict]:
         resolved_limit = self._resolve_limit_value(limit)
@@ -49,11 +57,16 @@ class Memory:
             return []
 
         with self.lock:
-            if resolved_limit >= len(self._history_cache):
-                return list(self._history_cache)
+            if resolved_limit <= len(self._history_cache):
+                start = len(self._history_cache) - resolved_limit
+                return list(self._history_cache[start:])
 
-            start = len(self._history_cache) - resolved_limit
-            return list(self._history_cache[start:])
+            history = self._fetch_history_from_db(resolved_limit)
+            if self.cache_limit >= 0:
+                self._history_cache = history[-self.cache_limit:]
+            else:
+                self._history_cache = list(history)
+            return history
 
     def clear(self) -> None:
         with self.lock:
@@ -63,6 +76,12 @@ class Memory:
 
     def set_default_limit(self, limit: int) -> None:
         self.default_history_limit = max(limit, 0)
+        self.cache_limit = self.default_history_limit if limit is not None else -1
+        if self.cache_limit == 0:
+            self._history_cache.clear()
+            return
+
+        self._history_cache = self._fetch_history_from_db(self.cache_limit)
 
     def close(self) -> None:
         with self.lock:
@@ -71,19 +90,31 @@ class Memory:
             except Exception:
                 pass
 
-    def _execute_write(self, query: str, params: Iterable | None = None) -> sqlite3.Cursor:
+    def _execute_write(
+        self, query: str, params: Iterable | None = None
+    ) -> sqlite3.Cursor:
         with self.lock:
             cursor = self.conn.execute(query, tuple(params or ()))
             self.conn.commit()
             return cursor
 
     def _preload_cache(self) -> None:
+        self._history_cache = self._fetch_history_from_db(self.cache_limit)
+
+    def _fetch_history_from_db(self, limit: int) -> list[dict[str, str]]:
+        if limit == 0:
+            return []
+
+        query = (
+            'SELECT role, content FROM messages '
+            'ORDER BY id DESC LIMIT ?'
+        )
         with self.lock:
-            cursor = self.conn.execute('SELECT role, content FROM messages ORDER BY id ASC')
-            self._history_cache = [
-                {'role': row[0], 'content': row[1]}
-                for row in cursor.fetchall()
-            ]
+            cursor = self.conn.execute(query, (limit,))
+            rows = cursor.fetchall()
+
+        rows.reverse()
+        return [{'role': row[0], 'content': row[1]} for row in rows]
 
     def _configure_connection(self) -> None:
         with self.lock:

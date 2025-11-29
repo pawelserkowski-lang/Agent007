@@ -12,16 +12,18 @@ class ChatBubble(MDCard):
 
     def __init__(self, **kwargs):
         # UWAGA: Kivy może wywoływać on_text / on_is_user bardzo wcześnie.
-        # Dlatego najpierw super(), a potem tworzymy label i dopiero wtedy stosujemy styl.
+        # Dlatego najpierw super(), a potem tworzymy label i dopiero wtedy
+        # stosujemy styl.
         super().__init__(**kwargs)
 
         self.padding = dp(10)
         self.spacing = dp(5)
-        self.size_hint_x = 0.8
+        self.size_hint_x = 0.9
         self.size_hint_y = None
-        self.elevation = 0
+        self.elevation = 2
 
-        # label może być użyty w on_text i _apply_style, więc trzymamy go na self
+        # label może być użyty w on_text i _apply_style, więc trzymamy go na
+        # self
         self.label = MDLabel(
             text=self.text,
             theme_text_color="Custom",
@@ -36,7 +38,8 @@ class ChatBubble(MDCard):
 
         # po zbudowaniu widgetu dociągamy styl i wysokość
         self._apply_style()
-        Clock.schedule_once(lambda dt: self._update_height(self.label, None), 0)
+        Clock.schedule_once(
+            lambda dt: self._update_height(self.label, None), 0)
 
     def _apply_style(self) -> None:
         """Ustaw kolory i promienie w zależności od roli."""
@@ -46,14 +49,14 @@ class ChatBubble(MDCard):
 
         if self.is_user:
             self.pos_hint = {"right": 1}
-            self.radius = [15, 15, 0, 15]
-            self.md_bg_color = (0.75, 0.86, 1, 1)
-            text_color = (0.08, 0.16, 0.25, 1)
+            self.radius = [18, 18, 6, 18]
+            self.md_bg_color = (0.09, 0.35, 0.78, 1)
+            text_color = (0.94, 0.97, 1, 1)
         else:
             self.pos_hint = {"x": 0}
-            self.radius = [15, 15, 15, 0]
-            self.md_bg_color = (0.97, 0.98, 1, 1)
-            text_color = (0.12, 0.16, 0.22, 1)
+            self.radius = [18, 18, 18, 6]
+            self.md_bg_color = (0.95, 0.97, 1, 1)
+            text_color = (0.12, 0.16, 0.25, 1)
 
         self.label.text_color = text_color
 

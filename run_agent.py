@@ -6,11 +6,12 @@ Jedyny entrypoint dla Agent007 na Windows:
 
 - ustawia katalog roboczy,
 - ustawia zmienne środowiskowe dla agenta,
-- sprawdza i w razie potrzeby *automatycznie* instaluje zależności Pythona
-  (pip, requirements.txt),
+- sprawdza i w razie potrzeby *automatycznie* instaluje zależności
+  Pythona (pip, requirements.txt),
 - sprawdza, czy jest zainstalowana Ollama:
     * szuka w PATH i typowych katalogach,
-    * jeśli nie ma, próbuje cichej instalacji przez `winget install Ollama.Ollama --silent`,
+    * jeśli nie ma, próbuje cichej instalacji przez
+      `winget install Ollama.Ollama --silent`,
 - sprawdza/pobiera model LLM (domyślnie `llama3`),
 - uruchamia main.py.
 """
@@ -35,7 +36,8 @@ DEFAULT_SYSTEM_PROMPT = os.getenv(
     "You are a helpful local AI assistant that replies in Polish.",
 )
 
-# globalna komenda do uruchamiania Ollamy (np. ["ollama"] albo ["C:\\...\\ollama.exe"])
+# globalna komenda do uruchamiania Ollamy (np. ["ollama"] albo
+# ["C:\\...\\ollama.exe"])
 OLLAMA_CMD = None  # type: ignore[assignment]
 
 
@@ -92,22 +94,26 @@ def ensure_python_dependencies() -> bool:
         return True
 
     logging.info(
-        "Próbuję automatycznie zainstalować brakujące paczki przez pip (w trybie dość cichym)..."
+        "Próbuję automatycznie zainstalować brakujące paczki przez pip "
+        "(w trybie dość cichym)..."
     )
 
     # upgrade podstawowych narzędzi
     try:
         subprocess.run(
-            [PYTHON, "-m", "pip", "install", "--upgrade", "pip", "setuptools", "virtualenv"],
+            [PYTHON, "-m", "pip", "install", "--upgrade",
+                "pip", "setuptools", "virtualenv"],
             check=False,
         )
     except Exception as e:
-        logging.warning("Nie udało się zaktualizować pip/setuptools/virtualenv: %s", e)
+        logging.warning(
+            "Nie udało się zaktualizować pip/setuptools/virtualenv: %s", e)
 
     # instalacja z requirements.txt
     req_path = ROOT_DIR / "requirements.txt"
     if not req_path.is_file():
-        logging.error("Brak pliku requirements.txt w katalogu projektu: %s", req_path)
+        logging.error(
+            "Brak pliku requirements.txt w katalogu projektu: %s", req_path)
         return False
 
     try:
@@ -121,7 +127,8 @@ def ensure_python_dependencies() -> bool:
                 result.returncode,
             )
     except Exception as e:
-        logging.error("Błąd podczas instalacji zależności z requirements.txt: %s", e)
+        logging.error(
+            "Błąd podczas instalacji zależności z requirements.txt: %s", e)
         return False
 
     # sprawdź ponownie
@@ -151,7 +158,8 @@ def install_ollama_via_winget() -> bool:
     """
     Próbuje cicho zainstalować Ollamę przez winget:
 
-        winget install --id Ollama.Ollama --silent --accept-package-agreements --accept-source-agreements
+        winget install --id Ollama.Ollama --silent
+        --accept-package-agreements --accept-source-agreements
     """
     if os.name != "nt":
         return False
@@ -159,7 +167,8 @@ def install_ollama_via_winget() -> bool:
     winget_path = shutil.which("winget")
     if not winget_path:
         logging.warning(
-            "Nie znaleziono 'winget' w PATH – nie mogę automatycznie zainstalować Ollamy.\n"
+            "Nie znaleziono 'winget' w PATH – nie mogę automatycznie"
+            " zainstalować Ollamy.\n"
             "Na Windows 10+ możesz ręcznie uruchomić:\n"
             "  winget install --id Ollama.Ollama"
         )
@@ -178,13 +187,20 @@ def install_ollama_via_winget() -> bool:
     try:
         result = subprocess.run(cmd)
         if result.returncode != 0:
-            logging.error("winget install Ollama.Ollama zakończyło się kodem %s", result.returncode)
+            logging.error(
+                "winget install Ollama.Ollama zakończyło się kodem %s",
+                result.returncode,
+            )
             return False
     except Exception as e:
-        logging.error("Błąd podczas wywołania winget install Ollama.Ollama: %s", e)
+        logging.error(
+            "Błąd podczas wywołania winget install Ollama.Ollama: %s",
+            e,
+        )
         return False
 
-    logging.info("Zakończono instalację Ollamy przez winget (sprawdzam binarkę)...")
+    logging.info(
+        "Zakończono instalację Ollamy przez winget (sprawdzam binarkę)...")
     return True
 
 
@@ -193,8 +209,8 @@ def ensure_ollama_available() -> bool:
     Sprawdza, czy Ollama jest dostępna:
     - najpierw przez PATH,
     - potem przez typowe ścieżki Windows,
-    - jeśli nadal nie ma i jest Windows, próbuje cichej instalacji przez winget,
-      a potem ponownie ją odnaleźć.
+    - jeśli nadal nie ma i jest Windows, próbuje cichej instalacji przez
+      winget, a potem ponownie ją odnaleźć.
 
     Ustawia globalne OLLAMA_CMD.
     """
@@ -223,11 +239,15 @@ def ensure_ollama_available() -> bool:
 
         localapp = os.getenv("LOCALAPPDATA")
         if localapp:
-            candidates.append(Path(localapp) / "Programs" / "Ollama" / "ollama.exe")
+            candidates.append(
+                Path(localapp) / "Programs" / "Ollama" / "ollama.exe"
+            )
 
         program_files = os.getenv("ProgramFiles", r"C:\Program Files")
         candidates.append(Path(program_files) / "Ollama" / "ollama.exe")
-        candidates.append(Path(program_files) / "Ollama" / "bin" / "ollama.exe")
+        candidates.append(
+            Path(program_files) / "Ollama" / "bin" / "ollama.exe"
+        )
 
         for exe in candidates:
             if exe.is_file():
@@ -247,7 +267,8 @@ def ensure_ollama_available() -> bool:
                     logging.info("Wykryto Ollama: %s", result.stdout.strip())
                 except Exception as e:
                     logging.error(
-                        "Błąd przy sprawdzaniu wersji Ollama (z lokalnej ścieżki): %s",
+                        "Błąd przy sprawdzaniu wersji Ollama"
+                        " (z lokalnej ścieżki): %s",
                         e,
                     )
                     return False
@@ -256,12 +277,16 @@ def ensure_ollama_available() -> bool:
         # 3) spróbuj cichej instalacji przez winget
         if install_ollama_via_winget():
             # po instalacji spróbuj jeszcze raz PATH + typowe katalogi
-            logging.info("Ponownie szukam Ollamy po instalacji przez winget...")
+            logging.info(
+                "Ponownie szukam Ollamy po instalacji przez winget..."
+            )
             return ensure_ollama_available()
 
     logging.error(
-        "Nie znaleziono komendy 'ollama' ani w PATH, ani w typowych lokalizacjach.\n"
-        "Zainstaluj Ollama ręcznie (np. z https://ollama.com/download lub przez winget):\n"
+        "Nie znaleziono komendy 'ollama' ani w PATH, ani w typowych "
+        "lokalizacjach.\n"
+        "Zainstaluj Ollama ręcznie (np. z https://ollama.com/download lub "
+        "przez winget):\n"
         "  winget install --id Ollama.Ollama"
     )
     return False
@@ -357,7 +382,8 @@ def main() -> int:
 
     # 1) zależności Pythona
     if not ensure_python_dependencies():
-        logging.error("Nie udało się przygotować środowiska Pythona – przerywam.")
+        logging.error(
+            "Nie udało się przygotować środowiska Pythona – przerywam.")
         logging.info("=== Agent007 runner finished (failure) ===")
         return 1
 
