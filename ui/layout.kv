@@ -113,6 +113,95 @@
         height: "40dp"
         halign: "center"
         theme_text_color: "Primary"
+    MDCard:
+        orientation: "vertical"
+        size_hint_y: None
+        adaptive_height: True
+        radius: [12,]
+        elevation: 1
+        padding: "10dp"
+        spacing: "6dp"
+        md_bg_color: app.theme_cls.bg_dark
+        MDLabel:
+            text: "Szybki podgląd"
+            font_style: "Subtitle2"
+            theme_text_color: "Secondary"
+            padding_x: "2dp"
+        MDBoxLayout:
+            adaptive_height: True
+            spacing: "8dp"
+            MDChip:
+                icon: "account"
+                text: "Sesja: {}".format(app.current_session_title)
+                text_color: [1, 1, 1, 0.95] if app.is_dark_mode else [0, 0, 0, 0.9]
+                md_bg_color: [0.2,0.2,0.2,0.35] if app.is_dark_mode else [0.93,0.96,1,0.9]
+                radius: 12
+            MDChip:
+                icon: "brain"
+                text: app.current_main_model if app.current_main_model else "Brak"
+                text_color: [1, 1, 1, 0.95] if app.is_dark_mode else [0, 0, 0, 0.9]
+                md_bg_color: [0.2,0.25,0.2,0.35] if app.is_dark_mode else [0.92,1,0.95,0.9]
+                radius: 12
+        MDBoxLayout:
+            adaptive_height: True
+            spacing: "8dp"
+            MDChip:
+                icon: "earth"
+                text: "Online" if app.use_google_search else "Offline"
+                text_color: [0.9,0.95,0.9,1] if app.use_google_search else ([0.9,0.6,0.6,1] if app.is_dark_mode else [0.6,0.2,0.2,1])
+                md_bg_color: [0.18,0.3,0.2,0.6] if app.use_google_search else ([0.3,0.15,0.15,0.55] if app.is_dark_mode else [1,0.92,0.92,0.9])
+                radius: 12
+            MDChip:
+                icon: "white-balance-sunny" if not app.is_dark_mode else "moon-waning-crescent"
+                text: "Jasny" if not app.is_dark_mode else "Ciemny"
+                text_color: [1, 1, 1, 0.95] if app.is_dark_mode else [0, 0, 0, 0.9]
+                md_bg_color: [0.25,0.25,0.3,0.4] if app.is_dark_mode else [0.95,0.95,1,0.9]
+                radius: 12
+    MDCard:
+        orientation: "vertical"
+        size_hint_y: None
+        adaptive_height: True
+        radius: [10,]
+        elevation: 1
+        padding: "10dp"
+        md_bg_color: app.theme_cls.bg_dark
+        MDBoxLayout:
+            adaptive_height: True
+            spacing: "10dp"
+            MDIcon:
+                icon: "information"
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.primary_color
+                pos_hint: {'center_y': .5}
+            MDBoxLayout:
+                orientation: "vertical"
+                adaptive_height: True
+                MDLabel:
+                    text: "Sesja: {}".format(app.current_session_title)
+                    font_style: "Body2"
+                    theme_text_color: "Primary"
+                MDLabel:
+                    text: "Model: {}".format(app.current_main_model)
+                    font_style: "Caption"
+                    theme_text_color: "Secondary"
+        MDSeparator:
+            height: "1dp"
+        MDBoxLayout:
+            adaptive_height: True
+            spacing: "10dp"
+            MDIcon:
+                icon: "brightness-6"
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.primary_color
+                pos_hint: {'center_y': .5}
+            MDLabel:
+                text: "Tryb ciemny"
+                pos_hint: {'center_y': .5}
+                theme_text_color: "Primary"
+            MDSwitch:
+                active: app.is_dark_mode
+                on_active: app.toggle_theme(self.active)
+                pos_hint: {'center_y': .5}
     MDSeparator:
     MDScrollView:
         MDBoxLayout:
@@ -120,35 +209,85 @@
             adaptive_height: True
             spacing: "15dp"
             padding: [0, 10, 0, 20]
-            MDTextField:
-                hint_text: "Klucz API Google"
-                text: app.api_key
-                password: True
-                mode: "rectangle"
-                on_text: app.update_api_key(self.text)
-                size_hint_y: None
-                height: "40dp"
-            MDLabel:
-                text: "Model (Hardcoded):"
-                font_style: "Subtitle2"
-                theme_text_color: "Secondary"
-            MDLabel:
-                text: "Gemini 1.5 Pro Latest"
-                font_style: "Caption"
-                theme_text_color: "Primary"
-            MDLabel:
-                text: "Zasoby i Pliki:"
-                font_style: "Subtitle2"
             MDCard:
                 orientation: "vertical"
                 size_hint_y: None
                 adaptive_height: True
                 radius: [10,]
                 elevation: 1
-                padding: "5dp"
+                padding: "10dp"
+                spacing: "8dp"
                 md_bg_color: app.theme_cls.bg_dark
                 MDBoxLayout:
                     adaptive_height: True
+                    spacing: "10dp"
+                    MDIcon:
+                        icon: "key-variant"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color
+                        pos_hint: {'center_y': .5}
+                    MDTextField:
+                        hint_text: "Klucz API Google"
+                        text: app.api_key
+                        password: True
+                        mode: "rectangle"
+                        on_text: app.update_api_key(self.text)
+                        helper_text: "Przechowywany lokalnie, używany do żądań online."
+                        helper_text_mode: "on_focus"
+                        size_hint_y: None
+                        height: "48dp"
+                MDSeparator:
+                    height: "1dp"
+                MDBoxLayout:
+                    orientation: "vertical"
+                    adaptive_height: True
+                    spacing: "2dp"
+            MDLabel:
+                text: "Model (wykryty)"
+                font_style: "Subtitle2"
+                theme_text_color: "Secondary"
+            MDLabel:
+                text: app.current_main_model
+                font_style: "Caption"
+                theme_text_color: "Primary"
+            MDBoxLayout:
+                adaptive_height: True
+                spacing: "6dp"
+                MDIcon:
+                    icon: "refresh"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.primary_color
+                    pos_hint: {'center_y': .5}
+                MDRaisedButton:
+                    text: "Odśwież modele"
+                    elevation: 0
+                    md_bg_color: app.theme_cls.primary_color
+                    on_release: app.refresh_model_discovery()
+                MDFlatButton:
+                    text: "Nowa Sesja"
+                    on_release: app.start_new_chat()
+            MDCard:
+                orientation: "vertical"
+                size_hint_y: None
+                adaptive_height: True
+                radius: [10,]
+                elevation: 1
+                padding: "8dp"
+                spacing: "6dp"
+                md_bg_color: app.theme_cls.bg_dark
+                MDLabel:
+                    text: "Zasoby i Pliki"
+                    font_style: "Subtitle2"
+                    theme_text_color: "Secondary"
+                    padding_x: "6dp"
+                MDBoxLayout:
+                    adaptive_height: True
+                    spacing: "8dp"
+                    MDIcon:
+                        icon: "magnify"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color
+                        pos_hint: {'center_y': .5}
                     MDSwitch:
                         active: app.use_google_search
                         on_active: app.use_google_search = self.active
@@ -160,6 +299,12 @@
                         theme_text_color: "Primary"
                 MDBoxLayout:
                     adaptive_height: True
+                    spacing: "8dp"
+                    MDIcon:
+                        icon: "content-save"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color
+                        pos_hint: {'center_y': .5}
                     MDSwitch:
                         active: app.param_auto_save_files
                         on_active: app.param_auto_save_files = self.active
@@ -171,6 +316,12 @@
                         theme_text_color: "Primary"
                 MDBoxLayout:
                     adaptive_height: True
+                    spacing: "8dp"
+                    MDIcon:
+                        icon: "message-alert"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color
+                        pos_hint: {'center_y': .5}
                     MDSwitch:
                         active: app.param_stackoverflow
                         on_active: app.param_stackoverflow = self.active
@@ -183,25 +334,60 @@
             MDLabel:
                 text: "Parametry Generowania:"
                 font_style: "Subtitle2"
-            MDLabel:
-                text: f"Kreatywność: {app.param_temperature:.1f}"
-                font_style: "Caption"
                 theme_text_color: "Secondary"
+            MDBoxLayout:
+                adaptive_height: True
+                spacing: "8dp"
+                MDIcon:
+                    icon: "fire"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.primary_color
+                    pos_hint: {'center_y': .5}
+                MDLabel:
+                    text: "Kreatywność"
+                    font_style: "Caption"
+                    theme_text_color: "Secondary"
+                    pos_hint: {'center_y': .5}
+                MDLabel:
+                    id: temperature_value
+                    text: "{:.1f}".format(app.param_temperature)
+                    font_style: "Caption"
+                    halign: "right"
+                    theme_text_color: "Primary"
             MDSlider:
                 min: 0.0
                 max: 1.0
                 value: app.param_temperature
-                on_value: app.param_temperature = self.value
+                on_value:
+                    app.param_temperature = self.value
+                    temperature_value.text = "{:.1f}".format(self.value)
                 hint: True
-            MDLabel:
-                text: f"Długość (Tokeny): {int(app.param_max_tokens)}"
-                font_style: "Caption"
-                theme_text_color: "Secondary"
+            MDBoxLayout:
+                adaptive_height: True
+                spacing: "8dp"
+                MDIcon:
+                    icon: "format-letter-case"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.primary_color
+                    pos_hint: {'center_y': .5}
+                MDLabel:
+                    text: "Długość (Tokeny)"
+                    font_style: "Caption"
+                    theme_text_color: "Secondary"
+                    pos_hint: {'center_y': .5}
+                MDLabel:
+                    id: max_tokens_value
+                    text: "{}".format(int(app.param_max_tokens))
+                    font_style: "Caption"
+                    halign: "right"
+                    theme_text_color: "Primary"
             MDSlider:
                 min: 1024
                 max: 32000
                 value: app.param_max_tokens
-                on_value: app.param_max_tokens = self.value
+                on_value:
+                    app.param_max_tokens = self.value
+                    max_tokens_value.text = "{}".format(int(self.value))
                 hint: True
             MDTextField:
                 hint_text: "Księga Zaklęć (System Prompt)"
@@ -211,6 +397,8 @@
                 multiline: True
                 size_hint_y: None
                 height: "80dp"
+                helper_text: "Stała instrukcja dla modelu."
+                helper_text_mode: "on_focus"
     MDFlatButton:
         text: "Zapisz i Zamknij"
         pos_hint: {"center_x": .5}
