@@ -1,4 +1,15 @@
-kivy
-kivymd
-ollama
-python-dotenv
+# --- GUI + Kivy na Windows ---
+kivy[base]==2.3.1
+kivymd==1.2.0
+
+# Dokładnie te wersje widać w logach Kivy:
+kivy_deps.sdl2==0.8.0 ; platform_system == "Windows"
+kivy_deps.glew==0.3.1 ; platform_system == "Windows"
+kivy_deps.angle==0.4.0 ; platform_system == "Windows"
+
+# --- LLM / agent ---
+ollama>=0.1.0
+python-dotenv>=1.0.0
+
+# Po pierwszej instalacji URUCHOMI `run_agent.py`:
+# - sam zadba o model `llama3` (ollama pull llama3)
