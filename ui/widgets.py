@@ -47,13 +47,13 @@ class ChatBubble(MDCard):
         if self.is_user:
             self.pos_hint = {"right": 1}
             self.radius = [15, 15, 0, 15]
-            self.md_bg_color = (0.2, 0.6, 1, 1)
-            text_color = (1, 1, 1, 1)
+            self.md_bg_color = (0.75, 0.86, 1, 1)
+            text_color = (0.08, 0.16, 0.25, 1)
         else:
             self.pos_hint = {"x": 0}
             self.radius = [15, 15, 15, 0]
-            self.md_bg_color = (0.9, 0.9, 0.9, 1)
-            text_color = (0.1, 0.1, 0.1, 1)
+            self.md_bg_color = (0.97, 0.98, 1, 1)
+            text_color = (0.12, 0.16, 0.22, 1)
 
         self.label.text_color = text_color
 

@@ -1,40 +1,132 @@
 #:import dp kivy.metrics.dp
 
 <MainScreen>:
+    md_bg_color: 0.98, 0.99, 1, 1
+
     MDBoxLayout:
         orientation: 'vertical'
-        padding: '10dp'
-        spacing: '10dp'
+        padding: '12dp'
+        spacing: '12dp'
 
-        # Lista wiadomości
-        MDScrollView:
-            id: scroll_view
-            do_scroll_x: False
+        MDTopAppBar:
+            title: 'Agent007 – Lokalny asystent'
+            md_bg_color: 0.9, 0.95, 1, 1
+            specific_text_color: 0.1, 0.2, 0.3, 1
+            elevation: 0
 
-            MDList:
-                id: chat_list
-                spacing: '12dp'
-                padding: [0, 0, 0, '20dp']
-
-        # Pasek inputu
-        MDBoxLayout:
-            size_hint_y: None
-            height: '60dp'
+        MDCard:
+            orientation: 'vertical'
+            padding: '12dp'
             spacing: '10dp'
-            padding: [0, '5dp', 0, '5dp']
+            md_bg_color: 0.95, 0.98, 1, 1
+            radius: [12, 12, 12, 12]
+            size_hint_y: None
+            height: self.minimum_height
+
+            MDGridLayout:
+                cols: 2
+                adaptive_height: True
+                spacing: '8dp'
+
+                MDTextField:
+                    id: model_input
+                    hint_text: 'Model (np. llama3)'
+                    mode: 'rectangle'
+                    multiline: False
+                    helper_text: 'Używany model LLM'
+                    helper_text_mode: 'on_focus'
+
+                MDRaisedButton:
+                    text: 'Zastosuj model'
+                    md_bg_color: 0.65, 0.82, 1, 1
+                    text_color: 0.05, 0.1, 0.2, 1
+                    on_release: root.apply_model()
+
+                MDTextField:
+                    id: history_limit_input
+                    hint_text: 'Limit historii (wiersze)'
+                    mode: 'rectangle'
+                    multiline: False
+                    helper_text: 'Ile ostatnich wiadomości wczytać'
+                    helper_text_mode: 'on_focus'
+
+                MDBoxLayout:
+                    spacing: '8dp'
+                    adaptive_height: True
+                    MDRaisedButton:
+                        text: 'Zastosuj limit'
+                        md_bg_color: 0.65, 0.82, 1, 1
+                        text_color: 0.05, 0.1, 0.2, 1
+                        on_release: root.apply_history_limit()
+                    MDRaisedButton:
+                        text: 'Odśwież historię'
+                        md_bg_color: 0.65, 0.82, 1, 1
+                        text_color: 0.05, 0.1, 0.2, 1
+                        on_release: root.refresh_history()
+                    MDRaisedButton:
+                        text: 'Wyczyść historię'
+                        md_bg_color: 0.85, 0.9, 0.95, 1
+                        text_color: 0.1, 0.1, 0.1, 1
+                        on_release: root.clear_history()
+
+            MDLabel:
+                text: 'System prompt'
+                theme_text_color: 'Custom'
+                text_color: 0.1, 0.2, 0.35, 1
+                bold: True
 
             MDTextField:
-                id: user_input
-                hint_text: 'Napisz wiadomość...'
+                id: system_prompt_input
+                hint_text: 'Zdefiniuj zachowanie asystenta'
                 mode: 'rectangle'
-                multiline: False
-                on_text_validate: root.send_message()
+                multiline: True
+                size_hint_y: None
+                height: '120dp'
+                helper_text: 'Zmiana wpływa na kolejne odpowiedzi'
+                helper_text_mode: 'on_focus'
 
-            MDIconButton:
-                icon: 'send'
-                theme_text_color: 'Custom'
-                text_color: app.theme_cls.primary_color
-                on_release: root.send_message()
+            MDRaisedButton:
+                text: 'Zapisz system prompt'
+                md_bg_color: 0.65, 0.82, 1, 1
+                text_color: 0.05, 0.1, 0.2, 1
+                size_hint_x: None
+                width: '200dp'
+                on_release: root.apply_system_prompt()
+
+        MDCard:
+            orientation: 'vertical'
+            padding: '12dp'
+            spacing: '10dp'
+            md_bg_color: 1, 1, 1, 1
+            radius: [12, 12, 12, 12]
+
+            MDScrollView:
+                id: scroll_view
+                do_scroll_x: False
+
+                MDList:
+                    id: chat_list
+                    spacing: '12dp'
+                    padding: [0, 0, 0, '20dp']
+
+            MDBoxLayout:
+                size_hint_y: None
+                height: '60dp'
+                spacing: '10dp'
+                padding: [0, '5dp', 0, '5dp']
+
+                MDTextField:
+                    id: user_input
+                    hint_text: 'Napisz wiadomość...'
+                    mode: 'rectangle'
+                    multiline: False
+                    on_text_validate: root.send_message()
+
+                MDRaisedButton:
+                    text: 'Wyślij'
+                    md_bg_color: 0.65, 0.82, 1, 1
+                    text_color: 0.05, 0.1, 0.2, 1
+                    on_release: root.send_message()
 
     MDSpinner:
         id: loading_spinner
