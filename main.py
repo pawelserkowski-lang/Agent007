@@ -217,6 +217,7 @@ class MainScreen(MDScreen):
 class LocalAIAgentApp(MDApp):
     def build(self):
         self.title = 'Local AI Agent (KivyMD + Ollama)'
+        self.icon = 'ikona.webp'
         self.theme_cls.primary_palette = 'LightBlue'
         self.theme_cls.theme_style = 'Light'
 
