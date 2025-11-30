@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 
 from core.database import DatabaseManager
 from core.agent import Agent
+from core.github_client import GitHubFetcher, GitHubFetchError
 from core.logger import KivyLogHandler
 
 # Importy
@@ -62,6 +63,11 @@ class DebugDruidApp(MDApp):
     param_temperature = NumericProperty(0.2)
     param_max_tokens = NumericProperty(8192)
     param_auto_save_files = BooleanProperty(True)
+
+    github_repo = StringProperty("")
+    github_branch = StringProperty("main")
+    github_files = StringProperty("")
+    github_token = StringProperty(os.getenv("GITHUB_TOKEN", ""))
 
     # Theme
     is_dark_mode = BooleanProperty(False)
@@ -142,6 +148,52 @@ class DebugDruidApp(MDApp):
         self.save_config()
         threading.Thread(target=self.init_agent_model, daemon=True).start()
 
+    def fetch_github_files(self):
+        repo = self.github_repo.strip()
+        branch = (self.github_branch or "main").strip() or "main"
+        files = [item.strip() for item in self.github_files.split(",") if item.strip()]
+        if not repo or not files:
+            toast("Podaj repozytorium i listę plików")
+            return
+
+        toast("Pobieram pliki z GitHub...")
+
+        def _worker():
+            fetcher = GitHubFetcher(token=self.github_token.strip() or None)
+            try:
+                contents = fetcher.fetch_files(repo, files, branch)
+            except GitHubFetchError as exc:
+                logging.error("GitHub download failed: %s", exc)
+                Clock.schedule_once(lambda dt: toast(f"Błąd GitHub: {exc}"), 0)
+                return
+            except Exception as exc:  # pragma: no cover - defensive
+                logging.error("Nieoczekiwany błąd GitHub: %s", exc)
+                Clock.schedule_once(lambda dt: toast("Błąd GitHub (szczegóły w logach)"), 0)
+                return
+
+            target_root = os.path.join("github_cache", repo.replace("/", "_"))
+            saved_paths = []
+            for relative_path, text in contents.items():
+                dest_path = os.path.join(target_root, relative_path)
+                os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+                with open(dest_path, "w", encoding="utf-8") as file_handle:
+                    file_handle.write(text)
+                saved_paths.append(dest_path)
+            logging.info("[GITHUB] Zapisano %d plików z %s:%s", len(saved_paths), repo, branch)
+
+            def _attach_files(dt):
+                chat_screen = self.root.ids.get("chat_screen")
+                if not chat_screen:
+                    toast("Nie znaleziono widoku czatu")
+                    return
+                for file_path in saved_paths:
+                    chat_screen.add_file_to_panel(file_path)
+                toast(f"Dodano {len(saved_paths)} plików z GitHub")
+
+            Clock.schedule_once(_attach_files, 0)
+
+        threading.Thread(target=_worker, daemon=True).start()
+
     def refresh_model_discovery(self):
         """Manually trigger model discovery and surface feedback in the UI."""
         toast("Odświeżam listę modeli...")
@@ -181,6 +233,11 @@ class DebugDruidApp(MDApp):
                     self.model_priority_families = data.get(
                         "model_priority_families", self.model_priority_families
                     )
+                    self.github_repo = data.get("github_repo", self.github_repo)
+                    self.github_branch = data.get("github_branch", self.github_branch)
+                    self.github_files = data.get("github_files", self.github_files)
+                    if not self.github_token:
+                        self.github_token = data.get("github_token", "")
                     if not self.api_key: self.api_key = data.get("api_key", "")
             except: pass
         if env_priority:
@@ -197,6 +254,10 @@ class DebugDruidApp(MDApp):
             "dark_mode": self.is_dark_mode,
             "api_key": self.api_key,
             "model_priority_families": list(self.model_priority_families),
+            "github_repo": self.github_repo,
+            "github_branch": self.github_branch,
+            "github_files": self.github_files,
+            "github_token": self.github_token,
         }
         try:
             with open(CONFIG_FILE, "w", encoding="utf-8") as f: json.dump(data, f, indent=4)

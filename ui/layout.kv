@@ -331,6 +331,69 @@
                         pos_hint: {'center_y': .5}
                         padding_x: "10dp"
                         theme_text_color: "Primary"
+            MDCard:
+                orientation: "vertical"
+                size_hint_y: None
+                adaptive_height: True
+                radius: [10,]
+                elevation: 1
+                padding: "10dp"
+                spacing: "8dp"
+                md_bg_color: app.theme_cls.bg_dark
+                MDBoxLayout:
+                    adaptive_height: True
+                    spacing: "10dp"
+                    MDIcon:
+                        icon: "github"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.primary_color
+                        pos_hint: {'center_y': .5}
+                    MDLabel:
+                        text: "GitHub Integracja"
+                        font_style: "Subtitle2"
+                        theme_text_color: "Secondary"
+                        pos_hint: {'center_y': .5}
+                MDTextField:
+                    hint_text: "owner/repo"
+                    text: app.github_repo
+                    on_text: app.github_repo = self.text
+                    mode: "rectangle"
+                    helper_text: "Repozytorium źródłowe"
+                    helper_text_mode: "on_focus"
+                    size_hint_y: None
+                    height: "48dp"
+                MDTextField:
+                    hint_text: "Gałąź (np. main)"
+                    text: app.github_branch
+                    on_text: app.github_branch = self.text
+                    mode: "rectangle"
+                    size_hint_y: None
+                    height: "48dp"
+                MDTextField:
+                    hint_text: "Ścieżki plików (rozdziel przecinkiem)"
+                    text: app.github_files
+                    on_text: app.github_files = self.text
+                    mode: "rectangle"
+                    multiline: True
+                    size_hint_y: None
+                    height: "72dp"
+                    helper_text: "np. README.md, src/main.py"
+                    helper_text_mode: "on_focus"
+                MDTextField:
+                    hint_text: "Token GitHub (opcjonalnie)"
+                    text: app.github_token
+                    on_text: app.github_token = self.text
+                    password: True
+                    mode: "rectangle"
+                    size_hint_y: None
+                    height: "48dp"
+                    helper_text: "Używany przy repo prywatnych"
+                    helper_text_mode: "on_focus"
+                MDRaisedButton:
+                    text: "Pobierz z GitHub"
+                    elevation: 0
+                    md_bg_color: app.theme_cls.primary_color
+                    on_release: app.fetch_github_files()
             MDLabel:
                 text: "Parametry Generowania:"
                 font_style: "Subtitle2"
