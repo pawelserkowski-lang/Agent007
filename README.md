@@ -19,6 +19,7 @@ A desktop-oriented Gemini assistant built with KivyMD. The app streamlines sessi
    ```
 
    The launcher prepends the repository to `PYTHONPATH` (deduplicating the root while preserving other entries) and uses your current Python interpreter.
+3. Run the application with `python main.py`.
 
 ## Tests
 Execute the fast unit suite with:
@@ -36,3 +37,6 @@ Additional design notes live in [`docs/model_discovery.md`](docs/model_discovery
 ### Grim-terface spellbook
 - Quick-reference for the Grimoire hotkeys and recent patch highlights: [`docs/grim_interface.md`](docs/grim_interface.md).
 - Architect-mode helper functions for templating plus language/framework/version detection (Python, JS/TS, C++, Go, PHP, Ruby, Rust + FastAPI/React/Gin/Laravel/Rails/Actix/Rocket) live in [`core/architect.py`](core/architect.py) and are documented in [`docs/architect_protocol.md`](docs/architect_protocol.md).
+
+### Grim-terface spellbook
+- Quick-reference for the Grimoire hotkeys and recent patch highlights: [`docs/grim_interface.md`](docs/grim_interface.md).
