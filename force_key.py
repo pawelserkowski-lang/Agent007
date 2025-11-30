@@ -1,4 +1,11 @@
-import threading
+import os
+
+# Twój klucz
+MY_KEY = "AIzaSyC6MWmKj3AToiX2xk3bnRqlrKyjvIbtNqw"
+
+print(f"☢️  NADPISUJĘ PLIK AGENTA KLUCZEM: {MY_KEY[:10]}... ☢️")
+
+AGENT_CODE = rf'''import threading
 import logging
 import os
 import re
@@ -51,7 +58,7 @@ class Agent:
     def send_message(self, session_id, message, file_contents, images, callback_success, callback_error):
         
         # --- TUTAJ JEST TWÓJ KLUCZ WPISANY NA TWARDO ---
-        real_api_key = "AIzaSyC6MWmKj3AToiX2xk3bnRqlrKyjvIbtNqw"
+        real_api_key = "{MY_KEY}"
         # -----------------------------------------------
 
         def _thread_target():
@@ -62,18 +69,18 @@ class Agent:
             target_model = "gemini-3-pro-preview"
             tools = [] # Search OFF
             
-            logging.info(f"[ENGINE] Target={target_model} Search=OFF Key=...{real_api_key[-5:]}")
+            logging.info(f"[ENGINE] Target={{target_model}} Search=OFF Key=...{{real_api_key[-5:]}}")
 
-            gen_config = {
+            gen_config = {{
                 "temperature": self.app.param_temperature,
                 "max_output_tokens": int(self.app.param_max_tokens),
-            }
+            }}
 
             full_text = message
             if file_contents:
                 full_text += "\n\n[CONTEXT FILES]:\n"
                 for fname, fcontent in file_contents.items():
-                    full_text += f"--- FILE: {fname} ---\n{fcontent}\n"
+                    full_text += f"--- FILE: {{fname}} ---\n{{fcontent}}\n"
             
             image_paths = images or []
             self.db.add_message(session_id, "user", full_text)
@@ -99,7 +106,7 @@ class Agent:
                 chat_history = []
                 for msg in history_data[:-1]:
                     role = "user" if msg["role"] == "user" else "model"
-                    chat_history.append({"role": role, "parts": [msg["content"]]})
+                    chat_history.append({{"role": role, "parts": [msg["content"]]}})
 
                 chat = model.start_chat(history=chat_history)
                 response = chat.send_message(content_parts)
@@ -114,7 +121,19 @@ class Agent:
 
             except Exception as exc:
                 err_msg = str(exc)
-                logging.error(f"Gemini Error: {err_msg}")
-                Clock.schedule_once(lambda dt: callback_error(f"Błąd API: {err_msg}"), 0)
+                logging.error(f"Gemini Error: {{err_msg}}")
+                Clock.schedule_once(lambda dt: callback_error(f"Błąd API: {{err_msg}}"), 0)
 
         threading.Thread(target=_thread_target, daemon=True).start()
+'''
+
+# Zapisz plik
+path = os.path.join("core", "agent.py")
+if os.path.exists(path):
+    os.remove(path) # Usuwamy stary plik dla pewności
+
+with open(path, "w", encoding="utf-8") as f:
+    f.write(AGENT_CODE)
+
+print(f"✅ PLIK {path} ZOSTAŁ STWORZONY NA NOWO.")
+print("Teraz uruchom: python launcher.py")

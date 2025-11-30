@@ -49,20 +49,20 @@ class Agent:
             return None
 
     def send_message(self, session_id, message, file_contents, images, callback_success, callback_error):
-        
-        # --- TUTAJ JEST TWÓJ KLUCZ WPISANY NA TWARDO ---
-        real_api_key = "AIzaSyC6MWmKj3AToiX2xk3bnRqlrKyjvIbtNqw"
-        # -----------------------------------------------
+        if not self.app.api_key:
+            callback_error("Brak klucza API!")
+            return
 
         def _thread_target():
             if not self._ensure_dependencies():
                 Clock.schedule_once(lambda dt: callback_error("Brak bibliotek"), 0)
                 return
 
+            # --- KONFIGURACJA ---
             target_model = "gemini-3-pro-preview"
-            tools = [] # Search OFF
+            tools = [] # PUSTA LISTA - TO NAPRAWIA BLAD 400
             
-            logging.info(f"[ENGINE] Target={target_model} Search=OFF Key=...{real_api_key[-5:]}")
+            logging.info(f"[ENGINE] Target={target_model} Search=OFF")
 
             gen_config = {
                 "temperature": self.app.param_temperature,
@@ -79,9 +79,7 @@ class Agent:
             self.db.add_message(session_id, "user", full_text)
 
             try:
-                # KONFIGURACJA Z POPRAWNYM KLUCZEM
-                self._genai.configure(api_key=real_api_key)
-                
+                self._genai.configure(api_key=self.app.api_key)
                 model = self._genai.GenerativeModel(
                     model_name=target_model,
                     system_instruction=self.base_prompt,

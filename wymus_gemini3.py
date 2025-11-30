@@ -1,4 +1,19 @@
-import threading
+import os
+
+print("--- WYMUSZANIE MODELU GEMINI-3-PRO-PREVIEW ---")
+
+# 1. MANAGER: Zwraca zawsze gemini-3-pro-preview
+MANAGER_CONTENT = r'''import google.generativeai as genai
+import os
+
+def get_best_model(api_key=None):
+    # WYMUSZENIE NA SZTYWNO
+    print("[ModelManager] WYMUSZONO: gemini-3-pro-preview")
+    return "models/gemini-3-pro-preview"
+'''
+
+# 2. AGENT: Ustawia target_model na gemini-3-pro-preview i wyłącza Search
+AGENT_CONTENT = r'''import threading
 import logging
 import os
 import re
@@ -49,20 +64,20 @@ class Agent:
             return None
 
     def send_message(self, session_id, message, file_contents, images, callback_success, callback_error):
-        
-        # --- TUTAJ JEST TWÓJ KLUCZ WPISANY NA TWARDO ---
-        real_api_key = "AIzaSyC6MWmKj3AToiX2xk3bnRqlrKyjvIbtNqw"
-        # -----------------------------------------------
+        if not self.app.api_key:
+            callback_error("Brak klucza API!")
+            return
 
         def _thread_target():
             if not self._ensure_dependencies():
                 Clock.schedule_once(lambda dt: callback_error("Brak bibliotek"), 0)
                 return
 
+            # --- KONFIGURACJA SZTYWNA ---
             target_model = "gemini-3-pro-preview"
-            tools = [] # Search OFF
+            tools = [] # Search wylaczony (niezbedne dla stabilnosci)
             
-            logging.info(f"[ENGINE] Target={target_model} Search=OFF Key=...{real_api_key[-5:]}")
+            logging.info(f"[ENGINE] Target={target_model} Search=OFF")
 
             gen_config = {
                 "temperature": self.app.param_temperature,
@@ -79,9 +94,7 @@ class Agent:
             self.db.add_message(session_id, "user", full_text)
 
             try:
-                # KONFIGURACJA Z POPRAWNYM KLUCZEM
-                self._genai.configure(api_key=real_api_key)
-                
+                self._genai.configure(api_key=self.app.api_key)
                 model = self._genai.GenerativeModel(
                     model_name=target_model,
                     system_instruction=self.base_prompt,
@@ -118,3 +131,21 @@ class Agent:
                 Clock.schedule_once(lambda dt: callback_error(f"Błąd API: {err_msg}"), 0)
 
         threading.Thread(target=_thread_target, daemon=True).start()
+'''
+
+# ZAPISYWANIE
+try:
+    with open(os.path.join("core", "model_manager.py"), "w", encoding="utf-8") as f:
+        f.write(MANAGER_CONTENT)
+    print("✅ core/model_manager.py - ZAPISANO (gemini-3-pro-preview)")
+except Exception as e:
+    print(f"❌ Błąd zapisu managera: {e}")
+
+try:
+    with open(os.path.join("core", "agent.py"), "w", encoding="utf-8") as f:
+        f.write(AGENT_CONTENT)
+    print("✅ core/agent.py - ZAPISANO (gemini-3-pro-preview)")
+except Exception as e:
+    print(f"❌ Błąd zapisu agenta: {e}")
+
+print("\n🎉 GOTOWE! Uruchom teraz: python launcher.py")
