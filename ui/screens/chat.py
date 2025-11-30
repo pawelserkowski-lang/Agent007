@@ -88,6 +88,7 @@ class ChatScreenLogic(MDBoxLayout):
         self.ids.timer_label.text = f"{time.time() - self.start_time:.2f}s"
 
     def on_success(self, text):
+        print(text) #
         self.stop_timer()
         self.add_bubble(text, is_user=False)
 
