@@ -126,7 +126,7 @@ class AgentSendMessageIntegrationTests(TestCase):
         fake_genai = _FakeGenAI("ok ```html\n<html>hi</html>\n``` more")
 
         self.app.param_auto_save_files = True
-        self.app.use_google_search = True
+        self.app.use_google_search = False
 
         agent = Agent(db_manager=db, app_instance=self.app, genai_client=fake_genai, image_loader=mock.Mock())
 

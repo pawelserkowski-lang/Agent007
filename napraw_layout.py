@@ -1,4 +1,11 @@
-#:kivy 2.3.0
+import os
+
+# Poprawiona treść pliku layout.kv
+# Zmiany:
+# 1. W <ChatBubble>: MDLabel ma teraz text_size ustawione dynamicznie.
+# 2. Usunięto błędne odwołania do Window wewnątrz definicji KV (czasem powodują błędy przy starcie).
+
+NEW_LAYOUT_KV = r'''#:kivy 2.3.0
 #:import ChatScreenLogic ui.screens.chat.ChatScreenLogic
 #:import NotepadLogic ui.screens.notepad.NotepadLogic
 #:import SessionItem ui.widgets.session_item.SessionItem
@@ -694,3 +701,17 @@
             font_name: "RobotoMono-Regular"
             font_size: "14sp"
             on_text: root.auto_save()
+'''
+
+def fix_layout():
+    print("🔧 Naprawiam plik ui/layout.kv...")
+    try:
+        with open(os.path.join("ui", "layout.kv"), "w", encoding="utf-8") as f:
+            f.write(NEW_LAYOUT_KV)
+        print("✅ Sukces! Plik layout.kv został zaktualizowany.")
+        print("Teraz dymki powinny mieć poprawną szerokość.")
+    except Exception as e:
+        print(f"❌ Błąd zapisu: {e}")
+
+if __name__ == "__main__":
+    fix_layout()

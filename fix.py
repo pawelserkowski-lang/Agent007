@@ -1,4 +1,17 @@
-import threading
+print("--- ROZPOCZYNAM NAPRAWĘ (FIX.PY) ---")
+import os
+
+# 1. TREŚĆ PLIKU MANAGER (Wymusza model)
+MANAGER_CONTENT = r'''import google.generativeai as genai
+import os
+
+def get_best_model(api_key=None):
+    print("[ModelManager] WYMUSZONO: gemini-3-pro-preview")
+    return "models/gemini-3-pro-preview"
+'''
+
+# 2. TREŚĆ PLIKU AGENT (Naprawia błąd Search i wymusza model)
+AGENT_CONTENT = r'''import threading
 import logging
 import os
 import re
@@ -116,3 +129,23 @@ class Agent:
                 Clock.schedule_once(lambda dt: callback_error(f"Błąd API: {err_msg}"), 0)
 
         threading.Thread(target=_thread_target, daemon=True).start()
+'''
+
+# ZAPISYWANIE
+print("--- ZAPISUJĘ PLIKI ---")
+
+try:
+    with open(os.path.join("core", "model_manager.py"), "w", encoding="utf-8") as f:
+        f.write(MANAGER_CONTENT)
+    print("✅ core/model_manager.py - ZAPISANO")
+except Exception as e:
+    print(f"❌ Błąd zapisu managera: {e}")
+
+try:
+    with open(os.path.join("core", "agent.py"), "w", encoding="utf-8") as f:
+        f.write(AGENT_CONTENT)
+    print("✅ core/agent.py - ZAPISANO")
+except Exception as e:
+    print(f"❌ Błąd zapisu agenta: {e}")
+
+print("--- GOTOWE. URUCHOM TERAZ: python launcher.py ---")

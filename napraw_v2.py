@@ -1,4 +1,22 @@
-import threading
+import os
+
+# ==========================================
+# 1. TREŚĆ DLA core/model_manager.py
+# ==========================================
+MANAGER_CODE = r'''import google.generativeai as genai
+import os
+
+def get_best_model(api_key=None):
+    # WYMUSZENIE MODELU NA SZTYWNO
+    print("[ModelManager] WYMUSZONO MODEL: gemini-3-pro-preview")
+    return "models/gemini-3-pro-preview"
+'''
+
+# ==========================================
+# 2. TREŚĆ DLA core/agent.py
+# ==========================================
+# Używamy r''' ... ''' aby Python nie interpretował znaków specjalnych w środku
+AGENT_CODE = r'''import threading
 import logging
 import os
 import re
@@ -27,7 +45,7 @@ class Agent:
             self._dependencies_ready = True
             return True
         except ImportError:
-            logging.critical("Brak bibliotek!")
+            logging.critical("Brak wymaganych bibliotek!")
             return False
 
     def discover_best_model(self, api_key: str) -> Optional[str]:
@@ -69,6 +87,7 @@ class Agent:
                 "max_output_tokens": int(self.app.param_max_tokens),
             }
 
+            # Budowanie tresci
             full_text = message
             if file_contents:
                 full_text += "\n\n[CONTEXT FILES]:\n"
@@ -76,6 +95,8 @@ class Agent:
                     full_text += f"--- FILE: {fname} ---\n{fcontent}\n"
             
             image_paths = images or []
+            
+            # Zapis do bazy
             self.db.add_message(session_id, "user", full_text)
 
             try:
@@ -93,6 +114,7 @@ class Agent:
                         content_parts.append(self._pil_image.open(img_path))
                     except: pass
 
+                # Historia czatu
                 history_data = self.db.get_context_messages(session_id, 10)
                 chat_history = []
                 for msg in history_data[:-1]:
@@ -103,6 +125,7 @@ class Agent:
                 response = chat.send_message(content_parts)
                 bot_reply = response.text
 
+                # Obsluga HTML
                 preview_file = self._check_and_save_html(bot_reply)
                 if preview_file:
                     Clock.schedule_once(lambda dt: self.app.open_web_preview(preview_file), 0)
@@ -116,3 +139,10 @@ class Agent:
                 Clock.schedule_once(lambda dt: callback_error(f"Błąd API: {err_msg}"), 0)
 
         threading.Thread(target=_thread_target, daemon=True).start()
+'''
+
+def apply_fix():
+    print("🔧 Rozpoczynam naprawę plików (wersja bezpieczna)...")
+
+    # Zapis model_manager.py
+    t
