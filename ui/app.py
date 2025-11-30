@@ -108,6 +108,10 @@ class DebugDruidApp(MDApp):
         """Ensure an API key exists before triggering model discovery."""
         key_source = self.api_key or os.getenv("API_KEY", "")
         key_origin = "memory" if self.api_key else ("env" if os.getenv("API_KEY") else "missing")
+        # --- PATCH: Auto-load from ENV ---
+        if not key_source:
+            key_source = os.environ.get('GOOGLE_API_KEY')
+        # -------------------------------
         if not key_source:
             Clock.schedule_once(lambda dt: setattr(self, "current_main_model", "Brak klucza API"), 0)
             Clock.schedule_once(lambda dt: toast("Podaj klucz API, aby pobrać modele"), 0)
@@ -116,7 +120,7 @@ class DebugDruidApp(MDApp):
 
         # Aktualizuj stan aplikacji tylko, gdy przejmujemy klucz z ENV
         if not self.api_key and key_source:
-            self.api_key = key_source
+            Clock.schedule_once(lambda dt: setattr(self, 'api_key', key_source))
             Clock.schedule_once(lambda dt: setattr(self, "api_key", key_source), 0)
             self.save_config()
 

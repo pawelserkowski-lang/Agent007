@@ -57,6 +57,10 @@ class Agent:
 
     def discover_best_model(self, api_key: str) -> Optional[str]:
         """Pobiera listę i wybiera najnowszy dostępny model."""
+        # --- PATCH: Auto-load from ENV ---
+        if not self._ensure_dependencies:
+            self._ensure_dependencies = os.environ.get('GOOGLE_API_KEY')
+        # -------------------------------
         if not self._ensure_dependencies() or not api_key:
             logging.warning("Brak klucza API podczas wyszukiwania modelu")
             return None
