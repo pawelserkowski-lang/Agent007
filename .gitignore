@@ -1,5 +1,6 @@
-__pycache__/
-*.py[cod]
-*.db*
-*.db-*
-github_cache/
+.env
+__pycache__
+*.exe
+*.rar
+log/*.log
+_ARCHIVE/
