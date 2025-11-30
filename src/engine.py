@@ -1,65 +1,64 @@
 import threading
-import types
-from queue import Queue  # Dodane na wszelki wypadek jasne importy qyueey
 import logging
 import google.generativeai as genai
+from queue import Queue
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from .config import CFG
 
-# ZAPOBIEGANIE ZWAIIE: Google SDK INIT
-"""
-Model AI Konfiuracaj.
-"""
-if CFG.API_KEY:
-    try:
-       genai.configure(api_key=CFG.API_KEY)
-    except Exception as e:
-       logging.error(f"Nie powiodlo się ustawini Api Key Globally: {e}")
+try:
+    genai.configure(api_key=CFG.API_KEY)
+except Exception as e:
+    logging.critical(f"Google AI SDK Configuration Failed: {e}")
 
-SAFETY_OFF = { 
-  "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE", 
-  "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE", 
-  "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE", 
-  "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE"
+SAFETY_SETTINGS = {
+    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
 }
 
 class SystemBrain:
     def __init__(self):
+        self.chat_session = None
+        self._init_model()
+
+    def _init_model(self):
         try:
+            logging.info(f"Initializing Model: {CFG.MODEL_ALIAS}")
             self.model = genai.GenerativeModel(
                 model_name=CFG.MODEL_ALIAS,
-                safety_settings=SAFETY_OFF 
+                safety_settings=SAFETY_SETTINGS
             )
-            # Try memory buffer
-            self.im_chat = self.model.start_chat(history=[])
+            self.chat_session = self.model.start_chat(history=[])
+            logging.info("Brain Module: Online")
         except Exception as e:
-            logging.exception("FATA BŁĄD. Engine init died. key wrong?")
-            self.im_chat = None
+            logging.error(f"Brain Init Error: {e}")
+            self.chat_session = None
 
-    def worker_gemini_generator(self, user_inpupt: str, output_queue_ref: Queue):
-        """Worker w watku tle."""
+    def worker_gemini_generator(self, user_input: str, output_queue: Queue):
+        if not self.chat_session:
+            output_queue.put(("ERROR", "Brain Disconnected. Restart Application."))
+            output_queue.put(("DONE", "Failed"))
+            return
+
         try:
-            if not self.im_chat:
-                output_queue_ref.put(("ERROR", "AI Brak połączenia (Start Chat null). Sprawdz .env API Key"))
-                # Sefety unlock:
-                output_queue_ref.put(("DONE", "Finished_Fault")) 
-                return
+            response = self.chat_session.send_message(user_input, stream=True)
             
-            # Streaming odpowiedzi
-            # Użynamy stream=True, to nie blokuje HTTP
-            response_generator = self.im_chat.send_message(user_inpupt, stream=True)
-            
-            # Iteracj bo kawalkahc idacych z google:
-            for chunk in response_generator:
-                txt = chunk.text 
-                if txt:
-                   # Wyslij paczje do GUI-Loop
-                   output_queue_ref.put(("AGENTE_SPRECHEN", txt))
-            
-            output_queue_ref.put(("DONE", "Success"))
+            for chunk in response:
+                try:
+                    text_part = chunk.text
+                    if text_part:
+                        output_queue.put(("MSG_CHUNK", text_part))
+                except ValueError:
+                    logging.warning("Empty chunk received (Safety Filter or Network artifact).")
+                    continue
+
+            output_queue.put(("DONE", "Success"))
 
         except Exception as e:
-            err_msg = str(e)
-            output_queue_ref.put(("ERROR", f"CRASH GEMIMI AI: {err_msg}"))
-            output_queue_ref.put(("DONE", True))
+            error_msg = str(e)
+            logging.error(f"Gemini Runtime Error: {error_msg}")
+            output_queue.put(("ERROR", f"AI Error: {error_msg}"))
+            output_queue.put(("DONE", "Crash"))
 
-print("DEBUG > Brain Module Imported Correctly!")
+print("DEBUG > Brain Module Loaded.")

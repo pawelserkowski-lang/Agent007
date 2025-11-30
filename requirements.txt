@@ -1,5 +1,6 @@
 kivy>=2.3.0
 kivymd>=1.2.0
-google-generativeai
+google-generativeai>=0.4.0
 python-dotenv
 Pillow
+docutils

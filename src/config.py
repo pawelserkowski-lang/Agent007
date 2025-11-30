@@ -1,30 +1,35 @@
 from pathlib import Path
 from dataclasses import dataclass, field
 import os
+import sys
 import logging
-from dotenv import load_dotenv
 
+# Konfiguracja logowania
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]: %(message)s")
 
-# Load Env (override=True ensures file fixes logic if env vars are messy, but System vars have priority logic below)
-load_dotenv()
-
-def get_best_key():
-    # Szukamy klucza w systemie (PRIORYTET)
-    candidates = ["GEMINI_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY"]
-    for c in candidates:
-        val = os.environ.get(c)
-        if val and len(val) > 20 and "WPISZ" not in val:
-            return val
-    # Fallback to config file content check handled by os.getenv check above mostly
-    return ""
+def get_strict_system_key():
+    val = os.environ.get("GEMINI_API_KEY")
+    
+    if not val:
+        logging.critical("CRITICAL ERROR: 'GEMINI_API_KEY' not found in System Environment Variables.")
+        logging.critical("ACTION REQUIRED: Set GEMINI_API_KEY in Windows (sysdm.cpl > Environment Variables).")
+        sys.exit(1)
+        
+    if "WPISZ" in val or len(val) < 20:
+        logging.critical("CRITICAL ERROR: 'GEMINI_API_KEY' seems invalid/placeholder.")
+        sys.exit(1)
+        
+    return val
 
 @dataclass(frozen=True)
 class Settings:
     APP_NAME: str = "DRUID AGENT v2.2-Final"
-    # ZMIANA: Sztywny, bezpieczny model. Usunięto błędy 'lateST'.
     MODEL_ALIAS: str = "gemini-3-pro-preview"
-    API_KEY: str = field(default_factory=get_best_key)
+    API_KEY: str = field(default_factory=get_strict_system_key)
     ROOT_DIR: Path = field(default_factory=lambda: Path(__file__).parent.parent)
 
-CFG = Settings()
+try:
+    CFG = Settings()
+except Exception as e:
+    logging.critical(f"Config Init Failed: {e}")
+    sys.exit(1)
