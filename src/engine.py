@@ -1,64 +1,72 @@
-import threading
-import logging
-import google.generativeai as genai
-from queue import Queue
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
-from .config import CFG
+import os
+import shutil
+from pathlib import Path
 
-try:
-    genai.configure(api_key=CFG.API_KEY)
-except Exception as e:
-    logging.critical(f"Google AI SDK Configuration Failed: {e}")
+def clean_slate():
+    root = Path(__file__).parent.parent
+    
+    # Lista plików do bezwzględnego usunięcia
+    to_delete = [
+        # ZAGROŻENIA BEZPIECZEŃSTWA (Hardcoded Keys)
+        "core/agent.py",
+        "config.json", 
+        
+        # MARTWY KOD / TYMCZASOWE FIXY
+        "fix_thread_crash.py",
+        "start_system_v2.py",
+        "launcher.py",
+        "launcher_pro.py",
+        "launcher_ultimate.py",
+        "debug_druid.bat", # Zakładam, że stworzymy nowy start script
+        "fix_all.py",
+        "fix.py",
+        "update_to_v2.py",
+        "wymus_gemini3.py",
+        "ustaw_model.py",
+        "znajdz_i_napraw.py",
+        "znajdz_logike.py",
+        "pokaz_kod.py",
+        "pokaz_ui.py",
+        "force_key.py",
+        "force_pro_model.py",
+        "Engine_Surgeon_Fix.py",
+        "Final_Config_Correction.py",
+        "Fixed_GUI_Injector_Final.py",
+        "MASTER_REPLASTER.py",
+        "ostateczna_naprawa.py",
+        "patch_agent.py",
+        "patch_druid.py",
+        "patch_v2.py",
+        "Sprawdz_Zmienne.py"
+    ]
 
-SAFETY_SETTINGS = {
-    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-}
+    print("--- ROZPOCZYNAM CZYSZCZENIE PROJEKTU (OPTION C) ---")
+    
+    deleted_count = 0
+    for file_rel in to_delete:
+        target = root / file_rel
+        if target.exists():
+            try:
+                if target.is_dir():
+                    shutil.rmtree(target)
+                else:
+                    os.remove(target)
+                print(f"[USUNIĘTO]: {file_rel}")
+                deleted_count += 1
+            except Exception as e:
+                print(f"[BŁĄD]: Nie można usunąć {file_rel}: {e}")
+        else:
+            pass # Plik już nie istnieje, to dobrze.
 
-class SystemBrain:
-    def __init__(self):
-        self.chat_session = None
-        self._init_model()
+    # Usunięcie folderu _ARCHIVE_BEFORE_V2 jeśli istnieje
+    archive = root / "_ARCHIVE_BEFORE_V2"
+    if archive.exists():
+        shutil.rmtree(archive)
+        print("[USUNIĘTO]: _ARCHIVE_BEFORE_V2")
+        deleted_count += 1
 
-    def _init_model(self):
-        try:
-            logging.info(f"Initializing Model: {CFG.MODEL_ALIAS}")
-            self.model = genai.GenerativeModel(
-                model_name=CFG.MODEL_ALIAS,
-                safety_settings=SAFETY_SETTINGS
-            )
-            self.chat_session = self.model.start_chat(history=[])
-            logging.info("Brain Module: Online")
-        except Exception as e:
-            logging.error(f"Brain Init Error: {e}")
-            self.chat_session = None
+    print(f"--- ZAKOŃCZONO. Usunięto {deleted_count} obiektów. ---")
+    print("Twój projekt korzysta teraz wyłącznie z 'main.py' i 'src/config.py'.")
 
-    def worker_gemini_generator(self, user_input: str, output_queue: Queue):
-        if not self.chat_session:
-            output_queue.put(("ERROR", "Brain Disconnected. Restart Application."))
-            output_queue.put(("DONE", "Failed"))
-            return
-
-        try:
-            response = self.chat_session.send_message(user_input, stream=True)
-            
-            for chunk in response:
-                try:
-                    text_part = chunk.text
-                    if text_part:
-                        output_queue.put(("MSG_CHUNK", text_part))
-                except ValueError:
-                    logging.warning("Empty chunk received (Safety Filter or Network artifact).")
-                    continue
-
-            output_queue.put(("DONE", "Success"))
-
-        except Exception as e:
-            error_msg = str(e)
-            logging.error(f"Gemini Runtime Error: {error_msg}")
-            output_queue.put(("ERROR", f"AI Error: {error_msg}"))
-            output_queue.put(("DONE", "Crash"))
-
-print("DEBUG > Brain Module Loaded.")
+if __name__ == "__main__":
+    clean_slate()
