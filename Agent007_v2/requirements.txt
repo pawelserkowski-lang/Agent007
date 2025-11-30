@@ -1,0 +1,4 @@
+kivymd==1.1.1
+kivy==2.3.0
+google-generativeai
+python-dotenv
