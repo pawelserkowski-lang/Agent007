@@ -1,4 +1,14 @@
-#:kivy 2.3.0
+import os
+
+print("--- NAPRAWA WYGLĄDU (DYMKI + KOPIOWANIE) ---")
+
+# Poprawiony plik layout.kv
+# Zmiany:
+# 1. text_size: Ustawione na sztywno na 75% szerokości okna (zapobiega ściskaniu).
+# 2. size: self.texture_size (dopasowuje wysokość do tekstu).
+# 3. Przycisk kopiowania: Zawsze widoczny i łatwiej dostępny.
+
+NEW_LAYOUT_KV = r'''#:kivy 2.3.0
 #:import ChatScreenLogic ui.screens.chat.ChatScreenLogic
 #:import NotepadLogic ui.screens.notepad.NotepadLogic
 #:import SessionItem ui.widgets.session_item.SessionItem
@@ -696,3 +706,12 @@
             font_name: "RobotoMono-Regular"
             font_size: "14sp"
             on_text: root.auto_save()
+'''
+
+try:
+    with open(os.path.join("ui", "layout.kv"), "w", encoding="utf-8") as f:
+        f.write(NEW_LAYOUT_KV)
+    print("✅ Sukces! Plik layout.kv został zaktualizowany.")
+    print("Teraz dymki powinny mieć poprawną szerokość, a przycisk kopiowania będzie widoczny.")
+except Exception as e:
+    print(f"❌ Błąd zapisu: {e}")
